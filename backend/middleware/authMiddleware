@@ -1,0 +1,9 @@
+module.exports = (req, res, next) => {
+    // Mock user authentication
+    req.user = {
+        id: 1, // Mock user ID
+        username: 'testuser',
+        email: 'testuser@example.com'
+    };
+    next();
+};
