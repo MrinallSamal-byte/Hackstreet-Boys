@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: "Arial", sans-serif;
+            background: url("assets/images/image.png") no-repeat center center/cover;
+            color: #333;
+        }
+
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            width: 100%;
+            padding: 20px;
+        }
+
+        .login-wrapper {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 50px;
+            border-radius: 10px;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            margin-bottom: 5px;
+        }
+
+        input, select, textarea {
+            margin-bottom: 15px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            background-color: #0056b3;
+        }
+
+        .signup-redirect {
+            margin-top: 20px;
+        }
+
+        .signup-link {
+            color: #007BFF;
+            text-decoration: none;
+        }
+
+        .signup-link:hover {
+            text-decoration: underline;
+        }
+
+        #message {
+            margin-top: 20px;
+            color: red;
+        }
+
+        #other-role {
+            display: none;
+        }
+
+        .error {
+            color: red;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <main class="login-container">
+        <section class="login-wrapper" aria-labelledby="signup-title">
+            <h1 id="signup-title">Sign Up</h1>
+            <form id="signup-form">
+                <label for="username">Username:</label>
+                <input type="text" id="username" name="username" required>
+                
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" required>
+                
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password" required>
+                <div class="error" id="password-error" style="display: none;">Password must be at least 6 characters long.</div>
+                
+                <label for="role">Role:</label>
+                <select id="role" name="role" required>
+                    <option value="Front Developer">Front Developer</option>
+                    <option value="Backend Developer">Backend Developer</option>
+                    <option value="Full Stack Developer">Full Stack Developer</option>
+                    <option value="UI/UX Designer">UI/UX Designer</option>
+                    <option value="Data Scientist">Data Scientist</option>
+                    <option value="Other">Other</option>
+                </select>
+                
+                <input type="text" id="other-role" name="otherRole" placeholder="Please specify your role">
+                
+                <button type="submit" class="btn">Sign Up</button>
+            </form>
+            <p id="message"></p>
+            <p class="signup-redirect">Already have an account? <a href="login.html" class="signup-link">Login</a></p>
+        </section>
+    </main>
+    <script>
+        document.getElementById('role').addEventListener('change', function() {
+            const otherRoleInput = document.getElementById('other-role');
+            if (this.value === 'Other') {
+                otherRoleInput.style.display = 'block';
+                otherRoleInput.required = true;
+            } else {
+                otherRoleInput.style.display = 'none';
+                otherRoleInput.required = false;
+            }
+        });
+
+        document.getElementById('signup-form').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const data = Object.fromEntries(formData.entries());
+
+            const password = data.password;
+            if (password.length < 6) {
+                document.getElementById('password-error').style.display = 'block';
+                return;
+            } else {
+                document.getElementById('password-error').style.display = 'none';
+            }
+            
+            if (data.role === 'Other') {
+                data.role = data.otherRole;
+                delete data.otherRole;
+            }
+            
+            try {
+                const response = await fetch('/api/signup', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                const result = await response.json();
+                document.getElementById('message').textContent = result.message;
+                if (response.ok) {
+                    window.location.href = result.redirect;
+                } else {
+                    document.getElementById('message').textContent = result.message;
+                }
+            } catch (error) {
+                document.getElementById('message').textContent = 'Signup failed';
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-800 min-h-screen flex items-center justify-center p-4">
+    <div class="w-full max-w-2xl">
+        <div class="bg-gray-700 shadow-xl rounded-lg overflow-hidden">
+            <!-- Profile Photo Section -->
+            <div class="flex justify-center pt-6">
+                <div id="profile-picture" class="w-32 h-32 rounded-full border-4 border-gray-600 flex items-center justify-center text-4xl text-white"></div>
+            </div>
+
+            <!-- User Details Table -->
+            <div class="p-6">
+                <h2 class="text-2xl font-bold text-white text-center mb-6">User Profile</h2>
+                <form id="profile-form">
+                    <table class="w-full text-white">
+                        <tbody>
+                            <tr class="border-b border-gray-600">
+                                <td class="py-3 px-4 font-semibold w-1/3">Name</td>
+                                <td class="py-3 px-4"><input type="text" id="username" name="username" class="bg-gray-600 text-white w-full" required disabled></td>
+                            </tr>
+                            <tr class="border-b border-gray-600">
+                                <td class="py-3 px-4 font-semibold">Email</td>
+                                <td class="py-3 px-4"><input type="email" id="email" name="email" class="bg-gray-600 text-white w-full" required disabled></td>
+                            </tr>
+                            <tr class="border-b border-gray-600">
+                                <td class="py-3 px-4 font-semibold">Date of Birth</td>
+                                <td class="py-3 px-4"><input type="date" id="dob" name="dob" class="bg-gray-600 text-white w-full" disabled></td>
+                            </tr>
+                            <tr class="border-b border-gray-600">
+                                <td class="py-3 px-4 font-semibold">Phone</td>
+                                <td class="py-3 px-4"><input type="text" id="phone" name="phone" class="bg-gray-600 text-white w-full" disabled></td>
+                            </tr>
+                            <tr class="border-b border-gray-600">
+                                <td class="py-3 px-4 font-semibold">Description</td>
+                                <td class="py-3 px-4"><textarea id="description" name="description" class="bg-gray-600 text-white w-full" rows="4" disabled></textarea></td>
+                            </tr>
+                            <tr class="border-b border-gray-600">
+                                <td class="py-3 px-4 font-semibold">College/School Name</td>
+                                <td class="py-3 px-4"><input type="text" id="institution" name="institution" class="bg-gray-600 text-white w-full" disabled></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="flex justify-center gap-4 mt-4">
+                        <button type="button" id="edit-button" class="bg-gray-600 hover:bg-gray-500 text-white font-semibold py-2 px-6 rounded-lg transition duration-300">Edit</button>
+                        <button type="submit" id="save-button" class="bg-gray-600 hover:bg-gray-500 text-white font-semibold py-2 px-6 rounded-lg transition duration-300" style="display: none;">Save</button>
+                    </div>
+                </form>
+                <p id="message" class="text-red-500 mt-4"></p>
+            </div>
+
+            <!-- Navigation Buttons -->
+            <div class="p-6 flex justify-center gap-4">
+                <a href="index.html" class="bg-gray-600 hover:bg-gray-500 text-white font-semibold py-2 px-6 rounded-lg transition duration-300">Home</a>
+                <a href="hackathons.html" class="bg-gray-600 hover:bg-gray-500 text-white font-semibold py-2 px-6 rounded-lg transition duration-300">Hackathons</a>
+            </div>
+        </div>
+    </div>
+    <script>
+        function getRandomColor() {
+            const letters = '0123456789ABCDEF';
+            let color = '#';
+            for (let i = 0; i < 6; i++) {
+                color += letters[Math.floor(Math.random() * 16)];
+            }
+            return color;
+        }
+
+        function updateProfilePicture(name) {
+            const profilePicture = document.getElementById('profile-picture');
+            const firstLetter = name ? name.charAt(0).toUpperCase() : '';
+            profilePicture.textContent = firstLetter;
+            profilePicture.style.backgroundColor = getRandomColor();
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const response = await fetch('/api/user');
+                if (response.ok) {
+                    const user = await response.json();
+                    document.getElementById('username').value = user.username;
+                    document.getElementById('email').value = user.email;
+                    document.getElementById('dob').value = user.dob ? new Date(user.dob).toISOString().split('T')[0] : '';
+                    document.getElementById('phone').value = user.phone || '';
+                    document.getElementById('description').value = user.description || '';
+                    document.getElementById('institution').value = user.institution || '';
+                    updateProfilePicture(user.username);
+                } else {
+                    window.location.href = '/login.html';
+                }
+            } catch (error) {
+                console.error('Error fetching user data:', error);
+            }
+        });
+
+        document.getElementById('edit-button').addEventListener('click', () => {
+            document.querySelectorAll('#profile-form input, #profile-form textarea').forEach(input => input.disabled = false);
+            document.getElementById('edit-button').style.display = 'none';
+            document.getElementById('save-button').style.display = 'block';
+        });
+
+        document.getElementById('profile-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+
+            // Ensure the date of birth is in the correct format
+            if (data.dob) {
+                data.dob = new Date(data.dob).toISOString();
+            }
+
+            try {
+                const response = await fetch('/api/profile', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const messageDiv = document.getElementById('message');
+                if (response.ok) {
+                    messageDiv.textContent = 'Profile updated successfully';
+                    messageDiv.className = 'message success';
+                    messageDiv.style.display = 'block';
+                    document.querySelectorAll('#profile-form input, #profile-form textarea').forEach(input => input.disabled = true);
+                    document.getElementById('edit-button').style.display = 'block';
+                    document.getElementById('save-button').style.display = 'none';
+                    updateProfilePicture(data.username);
+                } else {
+                    const error = await response.json();
+                    messageDiv.textContent = `Update failed: ${error.message}`;
+                    messageDiv.className = 'message error';
+                    messageDiv.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                const messageDiv = document.getElementById('message');
+                messageDiv.textContent = 'Update failed';
+                messageDiv.className = 'message error';
+                messageDiv.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>

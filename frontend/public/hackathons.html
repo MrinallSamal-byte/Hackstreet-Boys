@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hackathons</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px;
+            border: 1px solid #ddd;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        .hackathon-list {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .hackathon-item {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .hackathon-item:hover {
+            background-color: #f0f0f0;
+        }
+
+        .hackathon-details {
+            display: none;
+            padding: 10px;
+            border-top: 1px solid #ddd;
+        }
+
+        .hackathon-details p {
+            margin: 5px 0;
+        }
+
+        .registrations {
+            margin-top: 10px;
+        }
+
+        .registrations ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .registrations li {
+            padding: 5px 0;
+        }
+
+        .register-button, .add-user-button {
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .register-button:hover, .add-user-button:hover {
+            background-color: #0056b3;
+        }
+
+        .home-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            text-decoration: none;
+        }
+
+        .home-button:hover {
+            background-color: #0056b3;
+        }
+
+        .message {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            display: none;
+        }
+
+        .message.success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .message.error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <a href="/" class="home-button">Home</a>
+    <div class="container">
+        <h1>Upcoming Hackathons</h1>
+        <ul class="hackathon-list" id="hackathon-list">
+            <!-- Hackathon items will be populated here -->
+        </ul>
+        <div id="message" class="message"></div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const response = await fetch('/api/hackathons');
+                const hackathons = await response.json();
+                const hackathonList = document.getElementById('hackathon-list');
+
+                for (const hackathon of hackathons) {
+                    const listItem = document.createElement('li');
+                    listItem.className = 'hackathon-item';
+                    listItem.innerHTML = `
+                        <span>${hackathon.name}</span>
+                        <div class="buttons">
+                            <button class="register-button" onclick="redirectToRegistration(${hackathon.id})">Register</button>
+                        </div>
+                    `;
+
+                    // Check if the user is already registered
+                    const registrationResponse = await fetch(`/api/check-registration?hackathonId=${hackathon.id}`);
+                    const registrationStatus = await registrationResponse.json();
+                    if (registrationStatus.registered) {
+                        listItem.querySelector('.buttons').innerHTML = `
+                            <button class="add-user-button" onclick="addUserToHackathon(${hackathon.id})">Add Members</button>
+                            <button class="register-button" disabled>Already Registered</button>
+                        `;
+                    }
+
+                    listItem.addEventListener('click', async () => {
+                        const details = listItem.querySelector('.hackathon-details');
+                        if (details) {
+                            details.style.display = details.style.display === 'none' ? 'block' : 'none';
+                        } else {
+                            const detailsDiv = document.createElement('div');
+                            detailsDiv.className = 'hackathon-details';
+                            detailsDiv.innerHTML = `
+                                <p><strong>Date:</strong> ${hackathon.date}</p>
+                                <p><strong>Location:</strong> ${hackathon.location}</p>
+                                <p><strong>Description:</strong> ${hackathon.description}</p>
+                                <p><strong>Age Limit:</strong> ${hackathon.age_limit > 0 ? hackathon.age_limit : 'Anyone can join'}</p>
+                                <div class="registrations">
+                                    <p><strong>Participants:</strong></p>
+                                    <ul id="registrations-${hackathon.id}"></ul>
+                                </div>
+                            `;
+                            listItem.appendChild(detailsDiv);
+
+                            // Fetch registrations for the hackathon
+                            const registrationsResponse = await fetch(`/api/hackathons/${hackathon.id}/registrations`);
+                            const registrations = await registrationsResponse.json();
+                            const registrationsList = document.getElementById(`registrations-${hackathon.id}`);
+                            registrations.forEach(registration => {
+                                const registrationItem = document.createElement('li');
+                                registrationItem.textContent = `${registration.username} (${registration.email})`;
+                                registrationsList.appendChild(registrationItem);
+                            });
+                        }
+                    });
+                    hackathonList.appendChild(listItem);
+                }
+            } catch (error) {
+                console.error('Error fetching hackathons:', error);
+            }
+        });
+
+        function redirectToRegistration(hackathonId) {
+            window.location.href = `/register-hackathon.html?hackathonId=${hackathonId}`;
+        }
+
+        async function registerForHackathon(hackathonId) {
+            try {
+                const response = await fetch('/api/register-hackathon', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ hackathonId })
+                });
+                const result = await response.json();
+                const messageDiv = document.getElementById('message');
+                if (response.ok) {
+                    messageDiv.textContent = 'Successfully registered for the hackathon!';
+                    messageDiv.className = 'message success';
+                    messageDiv.style.display = 'block';
+                    setTimeout(() => {
+                        window.location.href = result.redirect;
+                    }, 2000);
+                } else {
+                    messageDiv.textContent = result.message;
+                    messageDiv.className = 'message error';
+                    messageDiv.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Error registering for hackathon:', error);
+                const messageDiv = document.getElementById('message');
+                messageDiv.textContent = 'Registration failed';
+                messageDiv.className = 'message error';
+                messageDiv.style.display = 'block';
+            }
+        }
+
+        async function addUserToHackathon(hackathonId) {
+            window.location.href = `/users.html?hackathonId=${hackathonId}`;
+        }
+    </script>
+</body>
+</html>

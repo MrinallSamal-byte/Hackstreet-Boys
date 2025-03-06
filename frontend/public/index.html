@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hackathon Management</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Arial', sans-serif;
+            background: url('assets/images/image.png') no-repeat center center/cover;
+            color: #333;
+        }
+
+        header {
+            width: 100%;
+        }
+
+        .navbar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.9); /* Increased opacity for better contrast */
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+            z-index: 1000; /* Ensure navbar is on top */
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .nav-links li {
+            display: flex;
+            align-items: center;
+        }
+
+        .nav-links a, .nav-links button {
+            color: white;
+            text-decoration: none;
+            font-size: 22px;
+            font-weight: bold;
+            transition: 0.3s;
+            padding: 10px 15px;
+            border-radius: 5px;
+            background-color: #007BFF; /* Match the hackathon button */
+        }
+
+        .nav-links a:hover, .nav-links button:hover {
+            color: #ff6600;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .search-container {
+            display: flex;
+            align-items: center;
+            position: relative;
+            margin-left: 20px; /* Add space between logout button and search bar */
+        }
+
+        .search-container input {
+            padding: 10px;
+            border-radius: 5px;
+            border: none;
+            margin-right: 5px;
+            background-color: #fff;
+            color: #333;
+            font-size: 16px;
+        }
+
+        .search-results {
+            position: absolute;
+            top: 40px;
+            left: 0;
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            width: 100%;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1001;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            color: #333; /* Make text color clear */
+        }
+
+        .search-results li {
+            padding: 10px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: none; /* Remove the line below the search bar */
+        }
+
+        .search-results li:hover {
+            background: #f0f0f0;
+        }
+
+        .hero {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: white;
+            background: rgba(0, 0, 0, 0.6);
+            position: relative;
+            padding: 20px;
+        }
+
+        .hero .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-content h2 {
+            font-size: 64px; /* Increased from 52px */
+            margin-bottom: 20px;
+        }
+
+        .hero-content p {
+            font-size: 32px; /* Increased from 26px */
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            padding: 15px 30px; /* Increased padding */
+            font-size: 20px; /* Increased font size */
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            background-color: #0056b3;
+        }
+
+        .content {
+            padding: 60px 0;
+            background: #f4f4f4;
+            text-align: center;
+        }
+
+        .info {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 30px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .info h2 {
+            font-size: 42px; /* Increased from 38px */
+            margin-bottom: 20px;
+        }
+
+        .info p {
+            font-size: 24px; /* Increased from 20px */
+            line-height: 1.6;
+        }
+
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            width: 100%;
+            padding: 20px;
+        }
+
+        .login-wrapper {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 50px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .profile-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            overflow: hidden;
+            cursor: pointer;
+            margin-right: 30px;
+            margin-left: 10px; /* Move the profile section to the left */ 
+        }
+
+        .profile-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <div class="logo">Hackathon Management</div>
+            <div class="search-container">
+                <ul class="nav-links">
+                    <li><a href="hackathons.html">Hackathons</a></li>
+                    <li><a href="login.html" id="login-button">Login</a></li>
+                    <li><button id="logout-button" style="display: none;">Logout</button></li>
+                </ul>
+                <input type="text" id="search-bar" placeholder="Search...">
+                <ul id="search-results" class="search-results"></ul>
+                <a href="profile.html" class="profile-icon" id="profile-link">
+                    <img src="assets/icons/profile-icon.png" alt="Profile" id="profile-image">
+                </a>
+            </div>
+        </nav>
+    </header>
+    <section class="hero">
+        <div class="overlay"></div>
+        <div class="hero-content">
+            <h2>Welcome to Hackathon Management</h2>
+            <p>Manage your hackathons efficiently and effectively.</p>
+            <a href="signup.html" class="btn">Get Started</a>
+        </div>
+    </section>
+    <section class="content">
+        <div class="info">
+            <h2>About Us</h2>
+            <p>Hackathon Management is a platform designed to help you manage and participate in hackathons with ease. Whether you're a participant or an organizer, our tools and features will help you stay organized and focused on what matters most - building amazing projects.</p>
+        </div>
+    </section>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const response = await fetch('/api/user');
+                if (response.ok) {
+                    document.getElementById('login-button').style.display = 'none';
+                    document.getElementById('logout-button').style.display = 'block';
+                } else {
+                    document.getElementById('profile-link').href = 'signup.html';
+                }
+            } catch (error) {
+                console.error('Error checking user session:', error);
+            }
+
+            document.getElementById('logout-button').addEventListener('click', async () => {
+                try {
+                    const response = await fetch('/api/logout', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    if (response.ok) {
+                        window.location.href = 'index.html';
+                    } else {
+                        console.error('Logout failed');
+                    }
+                } catch (error) {
+                    console.error('Logout error:', error);
+                }
+            });
+        });
+
+        const searchBar = document.getElementById('search-bar');
+        const searchResults = document.getElementById('search-results');
+
+        searchBar.addEventListener('input', async (event) => {
+            const query = event.target.value;
+            if (query) {
+                try {
+                    const response = await fetch(`/api/search?query=${query}`);
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    const results = await response.json();
+                    searchResults.innerHTML = '';
+                    results.forEach(user => {
+                        const li = document.createElement('li');
+                        li.textContent = user.username;
+                        const chatButton = document.createElement('button');
+                        chatButton.textContent = 'Chat';
+                        chatButton.addEventListener('click', () => {
+                            window.location.href = `/chat.html?username=${user.username}`;
+                        });
+                        li.appendChild(chatButton);
+                        searchResults.appendChild(li);
+                    });
+                } catch (error) {
+                    console.error('Search error:', error);
+                }
+            } else {
+                searchResults.innerHTML = '';
+            }
+        });
+
+        searchBar.addEventListener('keypress', (event) => {
+            if (event.key === 'Enter') {
+                window.location.href = 'users.html';
+            }
+        });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const loginButton = document.getElementById('login-button');
+            const logoutButton = document.getElementById('logout-button');
+
+            if (loginButton) {
+                loginButton.className = 'btn';
+            }
+
+            if (logoutButton) {
+                logoutButton.className = 'btn';
+                logoutButton.addEventListener('click', async () => {
+                    try {
+                        const response = await fetch('/api/logout', { method: 'POST' });
+                        if (response.ok) {
+                            window.location.href = '/login.html';
+                        }
+                    } catch (error) {
+                        console.error('Error logging out:', error);
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
